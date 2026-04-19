@@ -1,0 +1,37 @@
+name: Vercel Production Deployment
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
+  VERCEL_TELEMETRY_DISABLED: 1
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  Deploy-Production:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Environment Verification
+        run: |
+          echo "Checking environment availability..."
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then echo "✅ VERCEL_TOKEN: Present"; else echo "❌ VERCEL_TOKEN: Missing"; fi
+          if [ -n "${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}" ]; then echo "✅ VERCEL_ORG_ID: Present"; else echo "❌ VERCEL_ORG_ID: Missing"; fi
+          if [ -n "${{ secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID }}" ]; then echo "✅ VERCEL_PROJECT_ID: Present"; else echo "❌ VERCEL_PROJECT_ID: Missing"; fi
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
