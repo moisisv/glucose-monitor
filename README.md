@@ -7,6 +7,8 @@
 
 A premium, modern web application for real-time glucose monitoring and predictive estimation. Built with **Next.js 15 (App Router)** and visually polished using **Tailwind CSS** and **Chart.js**, this dashboard provides users with actionable insights into their glucose trends with a sophisticated **Glassmorphism** aesthetic.
 
+**🚀 Live Demo: [https://project-7514n-j199axhxy-moisisv-7414s-projects.vercel.app/](https://project-7514n-j199axhxy-moisisv-7414s-projects.vercel.app/)**
+
 ---
 
 ## ✨ Key Features
