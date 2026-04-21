@@ -194,6 +194,48 @@ const ErrorState = ({ error, onRetry, onLogin }) => (
   </div>
 );
 
+const CookieConsentModal = ({ onAccept, onDecline, isOpen }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[60] p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 max-w-lg w-full border border-gray-100 dark:border-slate-700 animate-in fade-in zoom-in duration-300">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
+            <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Cookie Consent</h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">
+            This application requires cookies to manage your **authentication session** and provide real-time updates.
+            We **do not** store any personal health data or track your behavior.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={onAccept}
+            className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 active:scale-[0.98] transition shadow-xl shadow-indigo-500/20"
+          >
+            I Accept
+          </button>
+          <button
+            onClick={onDecline}
+            className="w-full bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 py-3 rounded-2xl font-semibold border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600 transition"
+          >
+            Decline
+          </button>
+        </div>
+        <p className="text-[10px] text-center text-gray-400 dark:text-gray-500 mt-6 px-4">
+          Note: If you decline, you will be unable to sign in as the application cannot maintain a secure session.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+
 const LoginModal = ({ isOpen, onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -519,6 +561,8 @@ export default function GlucoseDashboard() {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [isTabFocused, setIsTabFocused] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
+  const [cookieConsent, setCookieConsent] = useState("undecided"); // undecided, accepted, declined
+
 
   const fetchData = async () => {
     try {
@@ -526,7 +570,9 @@ export default function GlucoseDashboard() {
       const response = await fetch("/api/glucose");
 
       if (response.status === 401) {
-        setShowLogin(true);
+        if (cookieConsent === "accepted") {
+          setShowLogin(true);
+        }
         return;
       }
 
@@ -571,6 +617,22 @@ export default function GlucoseDashboard() {
     fetchData();
   };
 
+  const handleAcceptCookies = () => {
+    localStorage.setItem("cookie_consent_accepted", "true");
+    setCookieConsent("accepted");
+  };
+
+  const handleDeclineCookies = () => {
+    setCookieConsent("declined");
+  };
+
+  useEffect(() => {
+    const consent = localStorage.getItem("cookie_consent_accepted");
+    if (consent === "true") {
+      setCookieConsent("accepted");
+    }
+  }, []);
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       setIsTabFocused(!document.hidden);
@@ -584,7 +646,7 @@ export default function GlucoseDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!isTabFocused) return;
+    if (!isTabFocused || cookieConsent !== "accepted") return;
 
     fetchData();
     const interval = setInterval(fetchData, 60000);
@@ -592,14 +654,34 @@ export default function GlucoseDashboard() {
     return () => {
       clearInterval(interval);
     };
-  }, [isTabFocused]);
+  }, [isTabFocused, cookieConsent]);
 
-  if (loading && data.length === 0 && !showLogin) return <LoadingState />;
+  if (loading && data.length === 0 && !showLogin && cookieConsent === "accepted") return <LoadingState />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-950 dark:to-slate-900 p-4 md:p-8">
-      {error ? (
-        <ErrorState error={error} onRetry={fetchData} onLogin={() => setShowLogin(true)} />
+      {cookieConsent === "declined" ? (
+        <div className="min-h-[80vh] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-10 max-w-md w-full border border-gray-100 dark:border-slate-700 text-center">
+            <div className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Consent Required</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+              We cannot provide the Glucose Monitoring dashboard without cookie consent, as they are essential for your session management.
+            </p>
+            <button
+              onClick={() => setCookieConsent("undecided")}
+              className="w-full bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition"
+            >
+              Reconsider
+            </button>
+          </div>
+        </div>
+      ) : error ? (
+        <ErrorState error={error} onRetry={fetchData} onLogin={() => cookieConsent === "accepted" && setShowLogin(true)} />
       ) : (
         <div className="max-w-7xl mx-auto">
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 md:p-8">
@@ -632,7 +714,12 @@ export default function GlucoseDashboard() {
           </div>
         </div>
       )}
-      <LoginModal isOpen={showLogin} onLogin={handleLoginSuccess} />
+      <LoginModal isOpen={showLogin && cookieConsent === "accepted"} onLogin={handleLoginSuccess} />
+      <CookieConsentModal
+        isOpen={cookieConsent === "undecided"}
+        onAccept={handleAcceptCookies}
+        onDecline={handleDeclineCookies}
+      />
     </div>
   );
 }

@@ -7,7 +7,7 @@
 
 A premium, modern web application for real-time glucose monitoring and predictive estimation. Built with **Next.js 15 (App Router)** and visually polished using **Tailwind CSS** and **Chart.js**, this dashboard provides users with actionable insights into their glucose trends with a sophisticated **Glassmorphism** aesthetic.
 
-**🚀 Live Demo: [https://project-7514n-j199axhxy-moisisv-7414s-projects.vercel.app/](https://project-7514n-j199axhxy-moisisv-7414s-projects.vercel.app/)**
+**🚀 Live App: [https://glucose-tracker.moisisv.com/](https://glucose-tracker.moisisv.com/)**
 
 ---
 
@@ -175,9 +175,13 @@ To enable this pipeline in your GitHub repository, add the following **Actions S
 
 ## 🛡️ Security & Privacy
 
-- **No Data Persistence**: This application does not use a database. It acts as a stateless proxy to the Libreview cloud.
-- **Secure Cookies**: Session data is stored in `httpOnly` cookies, which are inaccessible to client-side scripts.
-- **Privacy First**: All personal identifiers have been removed from the source code. The app dynamically identifies your data stream upon login.
+- **No Data Persistence**: This application does not use a database. No personal data is stored anywhere except for the necessary authentication session cookies. It acts as a stateless proxy to the Libreview cloud.
+- **Cookie Consent**: Upon first visit, the application prompts for consent to use cookies. These are strictly necessary for session management and authentication. If declined, the application will block authentication as it cannot maintain a secure session.
+- **Secure Cookies**: Session data is stored in `httpOnly` and `secure` cookies, which are inaccessible to client-side scripts. The following cookies are utilized:
+  - `libre_token`: The Libreview JWT authentication ticket.
+  - `libre_account_id`: Your Libreview account identifier.
+  - `libre_connection_id`: The specific patient identifier for the data stream.
+- **Privacy First**: All personal identifiers have been removed from the source code. The app dynamically identifies your data stream upon login and does not track user behavior.
 
 ---
 
